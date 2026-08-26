@@ -303,6 +303,8 @@ function runWarp(){
   num.classList.add("show");
   setTimeout(() => { Sound.fx.impact(); label.classList.add("show"); }, 900);
   setTimeout(() => begins.classList.add("show"), 1700);
+  // The story should not stall on the title card waiting for a swipe.
+  setTimeout(() => scrollToScene("name"), 3600);
 }
 
 function runName(){
@@ -314,6 +316,8 @@ function runName(){
     delay += 1900;
   });
   setTimeout(() => { reveal.classList.add("show"); Sound.fx.soft(); }, delay + 200);
+  // Continue automatically after the name reveal so the family chapter begins.
+  setTimeout(() => scrollToScene("family"), delay + 2300);
 }
 
 function runCountdown(){
@@ -549,35 +553,56 @@ const Constellation = (() => {
   }
 
   let autoTimer = null;
+  let autoHandoffTimer = null;
   let autoStopped = false;
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   function stopAutoScroll(){
     if (autoStopped) return;
     autoStopped = true;
-    if (autoTimer) clearInterval(autoTimer);
+    if (autoTimer) clearTimeout(autoTimer);
+    if (autoHandoffTimer) clearTimeout(autoHandoffTimer);
     $("#family-auto-note").classList.add("is-hidden");
   }
 
   function startAutoScroll(){
+    if (autoStopped) return;
+
+    // Reduced-motion users still get the complete constellation, but never
+    // get an unexpected animated page jump.
     if (reduceMotion) {
       REVEAL_ORDER.forEach(id => revealed.add(id));
       onScroll();
+      $("#family-auto-note").classList.add("is-hidden");
       return;
     }
+
     let step = 0;
+    const total = Math.max(0, section.offsetHeight - innerHeight);
     const advance = () => {
       if (autoStopped) return;
-      step++;
-      const total = section.offsetHeight - innerHeight;
+      step += 1;
       const progress = clamp(step / (REVEAL_ORDER.length + 1), 0, 1);
-      window.scrollTo({ top: section.offsetTop + progress * total, behavior:"smooth" });
-      if (step >= REVEAL_ORDER.length + 1) {
-        clearInterval(autoTimer);
-        setTimeout(() => $("#family-auto-note").classList.add("is-hidden"), 900);
+      const target = section.offsetTop + progress * total;
+
+      // Use one queued smooth scroll at a time. Repeated setInterval calls
+      // cancel/overwrite native smooth scrolling on mobile browsers.
+      window.scrollTo({ top: target, behavior: "smooth" });
+      onScroll();
+
+      if (step < REVEAL_ORDER.length + 1) {
+        autoTimer = setTimeout(advance, 1700);
+      } else {
+        $("#family-auto-note").classList.add("is-hidden");
+        // Explicitly cross the section boundary so the gift is always shown;
+        // do not rely on a partially completed smooth-scroll animation.
+        autoHandoffTimer = setTimeout(() => {
+          if (!autoStopped) scrollToScene("gift", "smooth");
+        }, 1500);
       }
     };
-    autoTimer = setInterval(advance, 1350);
+
+    autoTimer = setTimeout(advance, 800);
   }
 
   function activate(){
