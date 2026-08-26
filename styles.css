@@ -58,6 +58,13 @@ html{ scroll-behavior:smooth; }
 
 #app{ position:relative; z-index:1; }
 
+.scene{ transform-origin:center center; }
+.scene.world-enter{ animation:worldZoomIn 1.35s var(--ease-cinema) both; }
+@keyframes worldZoomIn{
+  from{ opacity:0; transform:scale(1.16); filter:blur(10px); }
+  to{ opacity:1; transform:scale(1); filter:blur(0); }
+}
+
 .scene{
   min-height:100svh;
   width:100%;
@@ -211,13 +218,21 @@ html{ scroll-behavior:smooth; }
   pointer-events:none;
 }
 .family-caption.show{ opacity:1; }
+.family-auto-note{
+  position:absolute; top:8%; left:50%; transform:translateX(-50%);
+  font-family:var(--font-ui); font-size:10px; letter-spacing:.22em;
+  color:var(--ink); opacity:.5; text-transform:uppercase; pointer-events:none;
+  transition:opacity .8s var(--ease-cinema);
+}
+.family-auto-note.is-hidden{ opacity:0; }
 
 /* ============ GIFT ============ */
 #scene-gift{ background:radial-gradient(circle at 50% 40%, #12121b, var(--void) 70%); }
 .gift-lead{
   font-family:var(--font-ui); letter-spacing:.3em; font-size:clamp(11px,2.4vw,14px);
-  color:var(--ink); margin-bottom:56px; opacity:0; animation:fadeUp 1.8s var(--ease-cinema) forwards;
+  color:var(--ink); margin-bottom:12px; opacity:0; animation:fadeUp 1.8s var(--ease-cinema) forwards;
 }
+.gift-instruction{ margin:0 0 42px; max-width:30rem; color:var(--ink); font-size:clamp(15px,2.8vw,20px); line-height:1.5; opacity:.8; }
 .gift-box{
   position:relative; width:130px; height:130px; border-radius:16px;
   background:linear-gradient(160deg,var(--maroon),var(--maroon-lit));
