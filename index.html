@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Chapter 31</title>
+<meta name="description" content="A private chapter." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<!-- Grain / vignette overlays -->
+<div class="grain"></div>
+<div class="vignette"></div>
+
+<!-- Ambient background canvas (particles, stars, constellation) -->
+<canvas id="bg-canvas"></canvas>
+
+<!-- Progress / back controls -->
+<button id="back-btn" class="chrome-btn back-btn" aria-label="Back" hidden>
+  <span>&#8592;</span>
+</button>
+<button id="sound-btn" class="chrome-btn sound-btn" aria-label="Toggle sound" hidden>
+  <span class="sound-icon">&#9834;</span>
+</button>
+
+<main id="app">
+
+  <!-- ============ SCENE 00 : NOTHING / AI BOOT ============ -->
+  <section class="scene" id="scene-boot" data-scene="boot">
+    <div class="boot-wrap">
+      <div class="boot-console">
+        <div id="boot-lines" class="boot-lines"></div>
+      </div>
+      <div id="boot-cta" class="boot-cta" hidden>
+        <h1 class="boot-title">START BUILDING YOUR APPS</h1>
+        <button id="start-btn" class="start-btn">
+          <span class="start-btn-label">START</span>
+          <span class="start-btn-ring"></span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SCENE 01/02 : TRANSITION + 31 REVEAL ============ -->
+  <section class="scene" id="scene-warp" data-scene="warp" hidden>
+    <div class="warp-field"></div>
+    <div class="warp-content">
+      <div class="chapter-31" id="chapter-number">31</div>
+      <div class="chapter-label" id="chapter-label">CHAPTER 31</div>
+      <div class="chapter-begins" id="chapter-begins">BEGINS</div>
+    </div>
+  </section>
+
+  <!-- ============ SCENE 03 : NAME REVEAL ============ -->
+  <section class="scene" id="scene-name" data-scene="name" hidden>
+    <div class="name-sequence">
+      <p class="name-line" data-line="1">31 YEARS</p>
+      <p class="name-line" data-line="2">COUNTLESS MOMENTS</p>
+      <p class="name-line" data-line="3">ONE JOURNEY</p>
+    </div>
+    <div class="name-reveal">
+      <div class="name-photo-frame">
+        <img src="images/1.webp" alt="" class="name-photo" onerror="this.onerror=null;this.src='images/1.jpg';" />
+      </div>
+      <h1 class="hero-name">FAKHRUDHEEN<br/>NAVAS MP</h1>
+      <p class="hero-sub">31 YEARS. COUNTLESS MEMORIES.</p>
+      <div class="scroll-hint">scroll to continue</div>
+    </div>
+  </section>
+
+  <!-- ============ SCENE 04 : FAMILY CONSTELLATION ============ -->
+  <section class="scene scene-tall" id="scene-family" data-scene="family" hidden>
+    <div class="family-sticky">
+      <canvas id="constellation-canvas"></canvas>
+      <div class="family-caption" id="family-caption"></div>
+    </div>
+  </section>
+
+  <!-- ============ SCENE 06 : THE GIFT ============ -->
+  <section class="scene" id="scene-gift" data-scene="gift" hidden>
+    <p class="gift-lead">THERE'S SOMETHING FOR YOU&hellip;</p>
+    <button id="gift-box" class="gift-box" aria-label="Open your gift">
+      <span class="gift-glow"></span>
+      <span class="gift-ribbon"></span>
+      <span class="gift-label">OPEN ME</span>
+    </button>
+  </section>
+
+  <!-- ============ SCENE 07 : COUNTDOWN ============ -->
+  <section class="scene" id="scene-countdown" data-scene="countdown" hidden>
+    <div id="countdown-num" class="countdown-num">3</div>
+  </section>
+
+  <!-- ============ SCENE 08 : MEMORY INTRO ============ -->
+  <section class="scene" id="scene-memintro" data-scene="memintro" hidden>
+    <p class="mem-intro-line" data-line="1">31 MEMORIES</p>
+    <p class="mem-intro-line" data-line="2">31 MOMENTS</p>
+    <p class="mem-intro-line" data-line="3">ONE BEAUTIFUL JOURNEY</p>
+  </section>
+
+  <!-- ============ SCENE 09 : PHOTO JOURNEY ============ -->
+  <section class="scene scene-tall" id="scene-photos" data-scene="photos" hidden>
+    <div class="photo-sticky">
+      <div class="memory-counter"><span id="mem-current">01</span> / 31</div>
+      <div id="photo-stage" class="photo-stage"></div>
+      <button id="mem-nav-toggle" class="mem-nav-toggle">MEMORIES</button>
+      <div id="mem-nav-panel" class="mem-nav-panel" hidden>
+        <p class="mem-nav-title">31 PHOTOS FOR YOUR 31ST BIRTHDAY</p>
+        <div id="mem-nav-grid" class="mem-nav-grid"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SCENE 10 : ALL MEMORIES RETURN ============ -->
+  <section class="scene" id="scene-collage" data-scene="collage" hidden>
+    <canvas id="collage-canvas"></canvas>
+  </section>
+
+  <!-- ============ SCENE 11 : FINAL ============ -->
+  <section class="scene" id="scene-final" data-scene="final" hidden>
+    <canvas id="heart-canvas"></canvas>
+    <div class="final-text">
+      <h1 class="final-line" id="final-line-1">HAPPY 31ST BIRTHDAY <span class="heart-glyph">&#10084;</span></h1>
+      <p class="final-line-2" id="final-line-2">Thanks For Open The Website</p>
+      <p class="final-with-love" id="final-with-love">WITH LOVE</p>
+    </div>
+  </section>
+
+</main>
+
+<script src="script.js"></script>
+</body>
+</html>
