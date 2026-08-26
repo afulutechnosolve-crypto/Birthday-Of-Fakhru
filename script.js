@@ -422,206 +422,55 @@ SCENE_ORDER.forEach(id => {
 --------------------------------------------------------- */
 const Constellation = (() => {
   const section = $("#scene-family");
-  const canvas = $("#constellation-canvas");
+  const list = $("#family-list");
   const caption = $("#family-caption");
-  const ctx = canvas.getContext("2d");
-  let w,h,dpr, raf=null, active=false;
-
-  // Layout: normalized coords (0..1) around center, designed by hand
-  // so the sister's branch (with husband + 3 children) has room.
-  const NODES = [
-    { id:"center", x:0.5, y:0.5, r:34, name:FAMILY.center.name, role:"", core:true, cap:null },
-    { id:"father", x:0.30, y:0.24, r:20, name:FAMILY.parents[0].name, role:FAMILY.parents[0].role, cap:"Where every story begins." },
-    { id:"mother", x:0.68, y:0.22, r:20, name:FAMILY.parents[1].name, role:FAMILY.parents[1].role, cap:"Where every story begins." },
-    { id:"wife",   x:0.5, y:0.78, r:22, name:FAMILY.wife.name, role:FAMILY.wife.role, cap:null, warm:true },
-    { id:"bro1",   x:0.15, y:0.52, r:18, name:FAMILY.brothers[0].name, role:FAMILY.brothers[0].role+(FAMILY.brothers[0].tag?"  ·  "+FAMILY.brothers[0].tag:""), cap:null },
-    { id:"bro2",   x:0.12, y:0.72, r:18, name:FAMILY.brothers[1].name, role:FAMILY.brothers[1].role, cap:null },
-    { id:"sis",    x:0.85, y:0.50, r:19, name:FAMILY.sister.name, role:FAMILY.sister.role, cap:null },
-    { id:"sisH",   x:0.90, y:0.66, r:16, name:FAMILY.sisterHusband.name, role:FAMILY.sisterHusband.role, cap:null, parent:"sis" },
-    { id:"kid1",   x:0.93, y:0.30, r:11, name:FAMILY.sisterKids[0].name, role:"", cap:null, parent:"sis" },
-    { id:"kid2",   x:0.98, y:0.44, r:11, name:FAMILY.sisterKids[1].name, role:"", cap:null, parent:"sis" },
-    { id:"kid3",   x:0.97, y:0.60, r:11, name:FAMILY.sisterKids[2].name, role:"", cap:null, parent:"sis" },
+  const note = $("#family-auto-note");
+  const MEMBERS = [
+    { name:FAMILY.center.name, role:"Birthday chapter" },
+    { name:FAMILY.parents[0].name, role:FAMILY.parents[0].role },
+    { name:FAMILY.parents[1].name, role:FAMILY.parents[1].role },
+    { name:FAMILY.wife.name, role:FAMILY.wife.role },
+    { name:FAMILY.brothers[0].name, role:"Brother · ME" },
+    { name:FAMILY.brothers[1].name, role:FAMILY.brothers[1].role },
+    { name:FAMILY.sister.name, role:FAMILY.sister.role },
+    { name:FAMILY.sisterHusband.name, role:FAMILY.sisterHusband.role },
+    ...FAMILY.sisterKids.map(k => ({name:k.name, role:"Family"}))
   ];
-  // connections: id -> parent id (default 'center')
-  function parentOf(n){ return n.parent || "center"; }
-
-  const revealed = new Set(["center"]);
-  let currentCaptionNode = null;
-
-  function resize(){
-    dpr = Math.min(window.devicePixelRatio||1, 2);
-    const rect = canvas.getBoundingClientRect();
-    canvas.width = rect.width*dpr; canvas.height = rect.height*dpr;
-    w = canvas.width; h = canvas.height;
-  }
-
-  function nodePx(n){
-    return { x: n.x*w, y: n.y*h, r: n.r*dpr };
-  }
-
-  let t = 0;
-  function draw(){
-    ctx.clearRect(0,0,w,h);
-    t += 0.02;
-
-    // connections first (under nodes)
-    NODES.forEach(n => {
-      if (n.id === "center" || !revealed.has(n.id)) return;
-      const pid = parentOf(n);
-      if (!revealed.has(pid)) return;
-      const a = nodePx(NODES.find(x=>x.id===pid));
-      const b = nodePx(n);
-      const grad = ctx.createLinearGradient(a.x,a.y,b.x,b.y);
-      grad.addColorStop(0, "rgba(201,162,75,0.55)");
-      grad.addColorStop(1, "rgba(140,44,61,0.35)");
-      ctx.strokeStyle = grad;
-      ctx.lineWidth = 1*dpr;
-      ctx.beginPath();
-      ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y);
-      ctx.stroke();
+  let active = false, autoStopped = false, timer = null;
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function build(){
+    list.innerHTML = "";
+    MEMBERS.forEach((member, index) => {
+      const row = document.createElement("div"); row.className = "family-member";
+      row.innerHTML = `<span class="family-index">${pad2(index+1)}</span><span class="family-member-copy"><strong>${member.name}</strong><small>${member.role}</small></span><span class="family-dot"></span>`;
+      list.appendChild(row);
     });
-
-    // nodes
-    NODES.forEach(n => {
-      if (!revealed.has(n.id)) return;
-      const p = nodePx(n);
-      const pulse = 0.75 + 0.25*Math.sin(t*1.6 + p.x*0.01);
-      const isFocused = n.id === currentCaptionNode;
-      const glowR = p.r * (isFocused ? 3.2 : 2.1) * pulse;
-
-      const glow = ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,glowR);
-      const base = n.core ? "232,201,135" : (n.warm ? "232,150,120" : "201,162,75");
-      glow.addColorStop(0, `rgba(${base},${isFocused?0.55:0.28})`);
-      glow.addColorStop(1, "rgba(0,0,0,0)");
-      ctx.fillStyle = glow;
-      ctx.beginPath(); ctx.arc(p.x,p.y,glowR,0,Math.PI*2); ctx.fill();
-
-      ctx.fillStyle = isFocused ? "#f3efe6" : `rgba(${base},0.9)`;
-      ctx.beginPath(); ctx.arc(p.x,p.y,p.r*(isFocused?1.15:1),0,Math.PI*2); ctx.fill();
-
-      // label
-      ctx.font = `${isFocused?600:400} ${13*dpr}px Inter, sans-serif`;
-      ctx.fillStyle = isFocused ? "#f3efe6" : "rgba(243,239,230,0.55)";
-      ctx.textAlign = "center";
-      const label = n.core ? "" : n.name;
-      if (label) ctx.fillText(label, p.x, p.y - p.r*1.7);
-      if (isFocused && n.role){
-        ctx.font = `italic 400 ${11*dpr}px 'Cormorant Garamond', serif`;
-        ctx.fillStyle = "rgba(201,162,75,0.9)";
-        ctx.fillText(n.role, p.x, p.y - p.r*1.7 - 15*dpr);
-      }
-      if (n.core){
-        ctx.font = `600 ${15*dpr}px Cinzel, serif`;
-        ctx.fillStyle = "#f3efe6";
-        ctx.fillText("FAKHRUDHEEN", p.x, p.y + p.r*0.1);
-        ctx.font = `400 ${11*dpr}px Cinzel, serif`;
-        ctx.fillText("NAVAS MP", p.x, p.y + p.r*0.6 + 11*dpr);
-      }
-    });
-
-    if (active) raf = requestAnimationFrame(draw);
   }
-
-  const REVEAL_ORDER = ["father","mother","wife","bro1","bro2","sis","sisH","kid1","kid2","kid3"];
-  const CAPTIONS = {
-    father:"Where every story begins.",
-    mother:"Where every story begins.",
-    wife:"", bro1:"", bro2:"", sis:"", sisH:"", kid1:"", kid2:"", kid3:""
-  };
-
-  function setCaption(text){
-    if (!text){ caption.classList.remove("show"); return; }
-    caption.textContent = text;
+  function reveal(index){
+    const row = list.children[index]; if (!row) return;
+    row.classList.add("revealed", "glowing");
+    setTimeout(() => row.classList.remove("glowing"), 900);
+    Sound.fx.soft();
+    caption.textContent = index === 0 ? "One beautiful journey, held by many people." : `${MEMBERS[index].name} · ${MEMBERS[index].role}`;
     caption.classList.add("show");
   }
-
-  function onScroll(){
-    const rect = section.getBoundingClientRect();
-    const total = section.offsetHeight - innerHeight;
-    const scrolled = clamp(-rect.top, 0, total);
-    const progress = total > 0 ? scrolled/total : 0;
-
-    // map progress 0..0.85 across reveal order; last stretch = full constellation view
-    const stepCount = REVEAL_ORDER.length;
-    const idx = clamp(Math.floor(progress * (stepCount+1.4)), 0, stepCount-1);
-
-    for (let i=0;i<=idx;i++) revealed.add(REVEAL_ORDER[i]);
-
-    const focusedId = progress > 0.92 ? null : REVEAL_ORDER[idx];
-    if (focusedId !== currentCaptionNode){
-      currentCaptionNode = focusedId;
-      const cap = focusedId ? CAPTIONS[focusedId] : null;
-      setCaption(progress > 0.92 ? "The people who make the journey meaningful." : cap);
-      if (focusedId) Sound.fx.soft();
-    }
-    if (progress > 0.92) setCaption("The people who make the journey meaningful.");
-  }
-
-  let autoTimer = null;
-  let autoHandoffTimer = null;
-  let autoStopped = false;
-  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-  function stopAutoScroll(){
+  function stop(){ if (autoStopped) return; autoStopped = true; if (timer) clearTimeout(timer); note.classList.add("is-hidden"); }
+  function start(){
     if (autoStopped) return;
-    autoStopped = true;
-    if (autoTimer) clearTimeout(autoTimer);
-    if (autoHandoffTimer) clearTimeout(autoHandoffTimer);
-    $("#family-auto-note").classList.add("is-hidden");
-  }
-
-  function startAutoScroll(){
-    if (autoStopped) return;
-
-    // Reduced-motion users still get the complete constellation, but never
-    // get an unexpected animated page jump.
-    if (reduceMotion) {
-      REVEAL_ORDER.forEach(id => revealed.add(id));
-      onScroll();
-      $("#family-auto-note").classList.add("is-hidden");
-      return;
-    }
-
-    let step = 0;
-    const total = Math.max(0, section.offsetHeight - innerHeight);
-    const advance = () => {
-      if (autoStopped) return;
-      step += 1;
-      const progress = clamp(step / (REVEAL_ORDER.length + 1), 0, 1);
-      const target = section.offsetTop + progress * total;
-
-      // Use one queued smooth scroll at a time. Repeated setInterval calls
-      // cancel/overwrite native smooth scrolling on mobile browsers.
-      window.scrollTo({ top: target, behavior: "smooth" });
-      onScroll();
-
-      if (step < REVEAL_ORDER.length + 1) {
-        autoTimer = setTimeout(advance, 1700);
-      } else {
-        $("#family-auto-note").classList.add("is-hidden");
-        // Explicitly cross the section boundary so the gift is always shown;
-        // do not rely on a partially completed smooth-scroll animation.
-        autoHandoffTimer = setTimeout(() => {
-          if (!autoStopped) scrollToScene("gift", "smooth");
-        }, 1500);
-      }
+    if (reduceMotion){ MEMBERS.forEach((_, i) => reveal(i)); note.classList.add("is-hidden"); return; }
+    let index = 0;
+    const next = () => {
+      if (autoStopped) return; reveal(index++);
+      if (index < MEMBERS.length) timer = setTimeout(next, 1450);
+      else { note.classList.add("is-hidden"); timer = setTimeout(() => { if (!autoStopped) scrollToScene("gift", "smooth"); }, 1800); }
     };
-
-    autoTimer = setTimeout(advance, 800);
+    timer = setTimeout(next, 850);
   }
-
   function activate(){
-    if (active) return;
-    active = true;
-    resize();
-    draw();
-    window.addEventListener("resize", resize);
-    window.addEventListener("scroll", onScroll, {passive:true});
-    ["wheel","pointerdown","touchstart","keydown"].forEach(type => window.addEventListener(type, stopAutoScroll, {once:true, passive:type !== "keydown"}));
-    onScroll();
-    setTimeout(startAutoScroll, reduceMotion ? 0 : 900);
+    if (active) return; active = true; build();
+    ["wheel","pointerdown","touchstart","keydown"].forEach(type => window.addEventListener(type, stop, {once:true, passive:type !== "keydown"}));
+    start();
   }
-
   return { activate };
 })();
 
