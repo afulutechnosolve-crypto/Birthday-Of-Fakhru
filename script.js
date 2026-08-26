@@ -256,6 +256,15 @@ soundBtn.addEventListener("click", () => {
   soundBtn.classList.toggle("muted", muted);
 });
 
+let giftOpened = false;
+$("#gift-box").addEventListener("click", () => {
+  if (giftOpened) return;
+  giftOpened = true;
+  $("#gift-box").classList.add("opening");
+  Sound.fx.burst();
+  setTimeout(() => scrollToScene("countdown"), 700);
+});
+
 /* ---------------------------------------------------------
    6. PER-SCENE ACTIVATION (fires once, first time visible)
 --------------------------------------------------------- */
@@ -265,6 +274,11 @@ function activateScene(id){
   if (activated.has(id)) return;
   activated.add(id);
   visitedStack.push(id);
+  const scene = sceneEl(id);
+  if (scene){
+    scene.classList.remove("world-enter");
+    requestAnimationFrame(() => scene.classList.add("world-enter"));
+  }
   if (id !== "boot"){
     backBtn.hidden = false;
     soundBtn.hidden = false;
@@ -534,6 +548,38 @@ const Constellation = (() => {
     if (progress > 0.92) setCaption("The people who make the journey meaningful.");
   }
 
+  let autoTimer = null;
+  let autoStopped = false;
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  function stopAutoScroll(){
+    if (autoStopped) return;
+    autoStopped = true;
+    if (autoTimer) clearInterval(autoTimer);
+    $("#family-auto-note").classList.add("is-hidden");
+  }
+
+  function startAutoScroll(){
+    if (reduceMotion) {
+      REVEAL_ORDER.forEach(id => revealed.add(id));
+      onScroll();
+      return;
+    }
+    let step = 0;
+    const advance = () => {
+      if (autoStopped) return;
+      step++;
+      const total = section.offsetHeight - innerHeight;
+      const progress = clamp(step / (REVEAL_ORDER.length + 1), 0, 1);
+      window.scrollTo({ top: section.offsetTop + progress * total, behavior:"smooth" });
+      if (step >= REVEAL_ORDER.length + 1) {
+        clearInterval(autoTimer);
+        setTimeout(() => $("#family-auto-note").classList.add("is-hidden"), 900);
+      }
+    };
+    autoTimer = setInterval(advance, 1350);
+  }
+
   function activate(){
     if (active) return;
     active = true;
@@ -541,7 +587,9 @@ const Constellation = (() => {
     draw();
     window.addEventListener("resize", resize);
     window.addEventListener("scroll", onScroll, {passive:true});
+    ["wheel","pointerdown","touchstart","keydown"].forEach(type => window.addEventListener(type, stopAutoScroll, {once:true, passive:type !== "keydown"}));
     onScroll();
+    setTimeout(startAutoScroll, reduceMotion ? 0 : 900);
   }
 
   return { activate };
@@ -633,7 +681,7 @@ const PhotoJourney = (() => {
     active = true;
     buildStage();
     buildNav();
-    preload(1); preload(2); preload(3);
+    for (let i=1; i<=PHOTO_COUNT; i++) preload(i);
     window.addEventListener("scroll", onScroll, {passive:true});
     onScroll();
   }
