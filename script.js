@@ -115,6 +115,10 @@ const Sound = (() => {
     tick:       () => blip({freq:700, dur:0.15,type:"sine", vol:0.2}),
     burst:      () => blip({freq:80,  dur:1.1, type:"sawtooth", vol:0.45, glide:600}),
     photo:      () => blip({freq:900, dur:0.18,type:"sine", vol:0.08}),
+    enter:      () => {
+      blip({freq:120, dur:0.85, type:"sine", vol:0.16, glide:360});
+      setTimeout(() => blip({freq:480, dur:0.7, type:"triangle", vol:0.1, glide:180}), 180);
+    },
     climax:     () => blip({freq:220, dur:1.6, type:"sine", vol:0.3, glide:220}),
   };
 
@@ -282,6 +286,7 @@ function activateScene(id){
   if (id !== "boot"){
     backBtn.hidden = false;
     soundBtn.hidden = false;
+    Sound.fx.enter();
   }
 
   switch(id){
@@ -634,6 +639,9 @@ const PhotoJourney = (() => {
   let imgA, imgB, activeIsA = true;
   let currentIndex = -1;
   let active = false;
+  let autoTimer = null;
+  let autoStopped = false;
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const cache = new Map();
 
   function srcFor(i){ return `images/${i}.webp`; }
@@ -642,6 +650,12 @@ const PhotoJourney = (() => {
   function preload(i){
     if (i < 1 || i > PHOTO_COUNT || cache.has(i)) return;
     const im = new Image();
+    im.onerror = function(){
+      if (this.dataset.fallback !== "1"){
+        this.dataset.fallback = "1";
+        this.src = fallbackFor(i);
+      }
+    };
     im.src = srcFor(i);
     cache.set(i, im);
   }
@@ -697,8 +711,27 @@ const PhotoJourney = (() => {
     const progress = total > 0 ? scrolled/total : 0;
     const idx = clamp(Math.round(progress*(PHOTO_COUNT-1))+1, 1, PHOTO_COUNT);
     showIndex(idx);
+  }
 
-    // when the final memory (31) is reached and passed, hand off to collage scene
+  function stopAuto(){
+    autoStopped = true;
+    if (autoTimer) clearTimeout(autoTimer);
+  }
+
+  function startAuto(){
+    if (reduceMotion || autoStopped) return;
+    const total = Math.max(0, section.offsetHeight - innerHeight);
+    let step = 1;
+    const advance = () => {
+      if (autoStopped) return;
+      const target = section.offsetTop + ((step - 1) / (PHOTO_COUNT - 1)) * total;
+      window.scrollTo({top: target, behavior:"smooth"});
+      showIndex(step);
+      step++;
+      if (step <= PHOTO_COUNT) autoTimer = setTimeout(advance, 1900);
+      else autoTimer = setTimeout(() => scrollToScene("collage", "smooth"), 1800);
+    };
+    autoTimer = setTimeout(advance, 1100);
   }
 
   function activate(){
@@ -708,10 +741,12 @@ const PhotoJourney = (() => {
     buildNav();
     for (let i=1; i<=PHOTO_COUNT; i++) preload(i);
     window.addEventListener("scroll", onScroll, {passive:true});
+    ["wheel","pointerdown","touchstart","keydown"].forEach(type => window.addEventListener(type, stopAuto, {once:true, passive:type !== "keydown"}));
     onScroll();
+    setTimeout(startAuto, reduceMotion ? 0 : 1000);
   }
 
-  navToggle.addEventListener("click", () => { navPanel.hidden = !navPanel.hidden; });
+  navToggle.addEventListener("click", () => { stopAuto(); navPanel.hidden = !navPanel.hidden; });
 
   return { activate };
 })();
