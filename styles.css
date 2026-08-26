@@ -209,21 +209,22 @@ html{ scroll-behavior:smooth; }
   position:sticky; top:0; height:100svh; width:100%;
   display:flex; align-items:center; justify-content:center; overflow:hidden;
 }
-#constellation-canvas{ position:absolute; inset:0; width:100%; height:100%; }
-.family-caption{
-  position:absolute; bottom:8%; left:50%; transform:translateX(-50%);
-  font-family:var(--font-serif); font-style:italic;
-  font-size:clamp(14px,2.8vw,20px); color:var(--cream);
-  opacity:0; transition:opacity 1s var(--ease-cinema); text-align:center; width:90%;
-  pointer-events:none;
-}
+.family-list-wrap{ width:min(92vw,720px); padding:8vh 0 12vh; }
+.family-kicker{ margin:0 0 12px; color:var(--gold-soft); font:500 10px var(--font-ui); letter-spacing:.24em; }
+.family-title{ margin:0 0 28px; color:var(--cream); font:600 clamp(24px,5vw,44px) var(--font-display); }
+.family-list{ display:flex; flex-direction:column; gap:10px; text-align:left; }
+.family-member{ display:flex; align-items:center; gap:14px; min-height:62px; padding:12px 16px; border:1px solid rgba(201,162,75,.14); background:rgba(14,14,20,.78); opacity:.18; transform:translateY(18px) scale(.98); transition:opacity .7s var(--ease-cinema), transform .7s var(--ease-cinema), border-color .5s, background .5s; }
+.family-member.revealed{ opacity:1; transform:none; }
+.family-member.glowing{ border-color:var(--gold); background:rgba(92,26,38,.7); box-shadow:0 0 28px rgba(201,162,75,.22); }
+.family-index{ color:var(--gold); font:600 11px var(--font-ui); letter-spacing:.1em; width:25px; }
+.family-member-copy{ display:flex; flex-direction:column; gap:4px; flex:1; }
+.family-member-copy strong{ color:var(--cream); font:600 clamp(13px,2.8vw,18px) var(--font-display); letter-spacing:.03em; }
+.family-member-copy small{ color:var(--ink); font:400 13px var(--font-serif); }
+.family-dot{ width:8px; height:8px; border-radius:50%; background:var(--gold); box-shadow:0 0 0 4px rgba(201,162,75,.1); }
+.family-caption{ min-height:25px; margin:22px 0 0; color:var(--cream); font:italic 18px var(--font-serif); opacity:0; transition:opacity .6s; }
 .family-caption.show{ opacity:1; }
-.family-auto-note{
-  position:absolute; top:8%; left:50%; transform:translateX(-50%);
-  font-family:var(--font-ui); font-size:10px; letter-spacing:.22em;
-  color:var(--ink); opacity:.5; text-transform:uppercase; pointer-events:none;
-  transition:opacity .8s var(--ease-cinema);
-}
+.family-auto-note{ position:absolute; top:5%; left:50%; transform:translateX(-50%); color:var(--ink); opacity:.5; font:10px var(--font-ui); letter-spacing:.22em; text-transform:uppercase; pointer-events:none; transition:opacity .8s; }
+.family-auto-note.is-hidden{ opacity:0; }
 .family-auto-note.is-hidden{ opacity:0; }
 
 /* ============ GIFT ============ */
@@ -296,11 +297,12 @@ html{ scroll-behavior:smooth; }
 }
 .memory-counter{
   position:absolute; top:max(28px, env(safe-area-inset-top)); left:50%; transform:translateX(-50%);
-  font-family:var(--font-ui); letter-spacing:.3em; font-size:12px; color:var(--ink); z-index:5;
+  font-family:var(--font-ui); letter-spacing:.3em; font-size:12px; color:var(--ink); z-index:20;
+  padding:8px 14px; border:1px solid rgba(201,162,75,.22); background:rgba(5,5,10,.82); backdrop-filter:blur(8px);
 }
 .memory-counter #mem-current{ color:var(--gold-soft); font-weight:600; }
 .photo-stage{
-  position:relative; width:min(86vw,520px); height:min(64vh,620px);
+  position:relative; z-index:2; width:min(86vw,520px); height:min(64vh,620px); margin-top:22px;
   display:flex; align-items:center; justify-content:center;
   perspective:1200px;
 }
