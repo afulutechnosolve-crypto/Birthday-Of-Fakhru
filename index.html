@@ -41,7 +41,7 @@
           <span class="start-btn-label">START</span>
           <span class="start-btn-ring"></span>
         </button>
-        <button id="start-building-btn" class="next-section-btn start-building-btn">Start Building <span aria-hidden="true">&darr;</span></button>
+        <button id="start-building-btn" class="next-section-btn start-building-btn" hidden>Start Building <span aria-hidden="true">&darr;</span></button>
       </div>
     </div>
   </section>
@@ -112,22 +112,24 @@
     <p class="mem-intro-line" data-line="1">31 MEMORIES</p>
     <p class="mem-intro-line" data-line="2">31 MOMENTS</p>
     <p class="mem-intro-line" data-line="3">ONE BEAUTIFUL JOURNEY</p>
-    <button class="next-section-btn mem-intro-next" data-next-scene="photos">See the memories <span aria-hidden="true">&darr;</span></button>
   </section>
 
   <!-- ============ SCENE 09 : PHOTO JOURNEY ============ -->
   <section class="scene" id="scene-photos" data-scene="photos" hidden>
     <div class="photo-sticky">
-      <div id="photo-stage" class="photo-stage"></div>
-      <div class="memory-counter"><span id="mem-current">01</span> / 31</div>
-      <div class="photo-controls">
-        <button id="mem-prev" class="memory-step-btn" type="button">Previous</button>
-        <button id="mem-next" class="memory-step-btn" type="button">Next photo</button>
+      <div class="photo-view">
+        <div id="photo-stage" class="photo-stage"></div>
+        <div class="memory-counter"><span id="mem-current">01</span> / 31</div>
+        <div class="photo-controls">
+          <button id="mem-prev" class="memory-step-btn" type="button">Previous</button>
+          <button id="mem-next" class="memory-step-btn" type="button">Next photo</button>
+        </div>
+        <button id="mem-nav-toggle" class="mem-nav-toggle">MEMORIES</button>
       </div>
-      <button id="mem-nav-toggle" class="mem-nav-toggle">MEMORIES</button>
       <div id="mem-nav-panel" class="mem-nav-panel" hidden>
         <p class="mem-nav-title">31 PHOTOS FOR YOUR 31ST BIRTHDAY</p>
         <div id="mem-nav-grid" class="mem-nav-grid"></div>
+        <button class="next-section-btn" data-next-scene="collage">Go next <span aria-hidden="true">&darr;</span></button>
       </div>
       <button class="next-section-btn photo-next-section" data-next-scene="collage">Go next <span aria-hidden="true">&darr;</span></button>
     </div>
@@ -136,6 +138,7 @@
   <!-- ============ SCENE 10 : ALL MEMORIES RETURN ============ -->
   <section class="scene" id="scene-collage" data-scene="collage" hidden>
     <canvas id="collage-canvas"></canvas>
+    <p class="collage-caption" id="collage-caption">31 MEMORIES</p>
     <button class="next-section-btn collage-next" data-next-scene="final">Go next <span aria-hidden="true">&darr;</span></button>
   </section>
 

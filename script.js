@@ -276,6 +276,7 @@ $("#gift-box").addEventListener("click", () => {
   Sound.fx.burst();
   setTimeout(() => {
     $("#gift-box").hidden = true;
+    scrollToScene("countdown");
   }, 700);
 });
 
@@ -347,6 +348,7 @@ function runCountdown(){
         el.textContent = "OPEN";
         el.className = "countdown-num burst";
         Sound.fx.burst();
+        setTimeout(() => scrollToScene("memintro"), 1600);
       }, 1000);
     }
   }
@@ -360,6 +362,7 @@ function runMemIntro(){
     setTimeout(() => l.classList.add("show"), delay);
     delay += 1900;
   });
+  setTimeout(() => scrollToScene("photos"), delay + 2400);
 }
 
 function runFinal(){
@@ -375,20 +378,22 @@ function runFinal(){
 /* ---------------------------------------------------------
    7. START BUTTON
 --------------------------------------------------------- */
-function launchApp(btn){
+function launchApp(){
+  revealAllScenes();
+  document.documentElement.style.overflow = "auto";
+  activateScene("boot");
+  scrollToScene("warp", "smooth");
+}
+$("#start-btn").addEventListener("click", (e) => {
   Sound.init();
   Sound.fx.activate();
-  if (btn) btn.classList.add("launching");
-  document.body.style.overflow = "";
-  setTimeout(() => {
-    revealAllScenes();
-    document.documentElement.style.overflow = "auto";
-    activateScene("boot");
-    scrollToScene("warp", "smooth");
-  }, 750);
-}
-$("#start-btn").addEventListener("click", (e) => launchApp(e.currentTarget));
-$("#start-building-btn").addEventListener("click", () => launchApp());
+  e.currentTarget.classList.add("launching");
+  setTimeout(() => { $("#start-building-btn").hidden = false; }, 900);
+});
+$("#start-building-btn").addEventListener("click", () => {
+  Sound.fx.activate();
+  launchApp();
+});
 
 /* lock scroll until launch */
 document.documentElement.style.overflow = "hidden";
@@ -632,6 +637,7 @@ const Collage = (() => {
     started = true;
     init();
     draw();
+    setTimeout(() => $("#collage-caption").classList.add("show"), 1300);
     window.addEventListener("resize", () => { resize(); });
   }
 
