@@ -276,7 +276,6 @@ $("#gift-box").addEventListener("click", () => {
   Sound.fx.burst();
   setTimeout(() => {
     $("#gift-box").hidden = true;
-    $("#gift-next").hidden = false;
   }, 700);
 });
 
@@ -348,7 +347,6 @@ function runCountdown(){
         el.textContent = "OPEN";
         el.className = "countdown-num burst";
         Sound.fx.burst();
-        setTimeout(() => $("#countdown-next").hidden = false, 750);
       }, 1000);
     }
   }
@@ -367,20 +365,20 @@ function runMemIntro(){
 function runFinal(){
   Sound.fx.climax();
   HeartField.activate();
-  const l1 = $("#final-line-1"), l2 = $("#final-line-2"), l3 = $("#final-with-love");
+  const l1 = $("#final-line-1"), l2 = $("#final-line-2"), l3 = $("#final-with-love"), fd = $("#final-date");
   setTimeout(() => l1.classList.add("show"), 600);
   setTimeout(() => l2.classList.add("show"), 2200);
+  setTimeout(() => fd.classList.add("show"), 3000);
   setTimeout(() => l3.classList.add("show"), 3600);
 }
 
 /* ---------------------------------------------------------
    7. START BUTTON
 --------------------------------------------------------- */
-$("#start-btn").addEventListener("click", (e) => {
+function launchApp(btn){
   Sound.init();
   Sound.fx.activate();
-  const btn = e.currentTarget;
-  btn.classList.add("launching");
+  if (btn) btn.classList.add("launching");
   document.body.style.overflow = "";
   setTimeout(() => {
     revealAllScenes();
@@ -388,7 +386,9 @@ $("#start-btn").addEventListener("click", (e) => {
     activateScene("boot");
     scrollToScene("warp", "smooth");
   }, 750);
-});
+}
+$("#start-btn").addEventListener("click", (e) => launchApp(e.currentTarget));
+$("#start-building-btn").addEventListener("click", () => launchApp());
 
 /* lock scroll until launch */
 document.documentElement.style.overflow = "hidden";
