@@ -243,8 +243,16 @@ function revealAllScenes(){
 
 function scrollToScene(id, behavior="smooth"){
   const el = sceneEl(id);
-  if (el) el.scrollIntoView({ behavior, block:"start" });
+  if (!el) return;
+  activateScene(id);
+  el.scrollIntoView({ behavior, block:"start" });
 }
+
+$$('[data-next-scene]').forEach(button => {
+  button.addEventListener("click", () => scrollToScene(button.dataset.nextScene));
+});
+
+$("#final-restart").addEventListener("click", () => window.location.reload());
 
 function goBack(){
   if (visitedStack.length > 1){
@@ -266,7 +274,10 @@ $("#gift-box").addEventListener("click", () => {
   giftOpened = true;
   $("#gift-box").classList.add("opening");
   Sound.fx.burst();
-  setTimeout(() => scrollToScene("countdown"), 700);
+  setTimeout(() => {
+    $("#gift-box").hidden = true;
+    $("#gift-next").hidden = false;
+  }, 700);
 });
 
 /* ---------------------------------------------------------
@@ -308,8 +319,6 @@ function runWarp(){
   num.classList.add("show");
   setTimeout(() => { Sound.fx.impact(); label.classList.add("show"); }, 900);
   setTimeout(() => begins.classList.add("show"), 1700);
-  // The story should not stall on the title card waiting for a swipe.
-  setTimeout(() => scrollToScene("name"), 3600);
 }
 
 function runName(){
@@ -321,8 +330,6 @@ function runName(){
     delay += 1900;
   });
   setTimeout(() => { reveal.classList.add("show"); Sound.fx.soft(); }, delay + 200);
-  // Continue automatically after the name reveal so the family chapter begins.
-  setTimeout(() => scrollToScene("family"), delay + 2300);
 }
 
 function runCountdown(){
@@ -341,7 +348,7 @@ function runCountdown(){
         el.textContent = "OPEN";
         el.className = "countdown-num burst";
         Sound.fx.burst();
-        setTimeout(() => scrollToScene("memintro"), 750);
+        setTimeout(() => $("#countdown-next").hidden = false, 750);
       }, 1000);
     }
   }
@@ -355,7 +362,6 @@ function runMemIntro(){
     setTimeout(() => l.classList.add("show"), delay);
     delay += 1900;
   });
-  setTimeout(() => scrollToScene("photos"), delay + 400);
 }
 
 function runFinal(){
@@ -399,8 +405,7 @@ const io = new IntersectionObserver((entries) => {
   });
 }, { threshold: 0.35 });
 
-/* tall, scroll-driven scenes need to attach their scroll listeners the
-   instant the visitor reaches them, not 35% deep into a 400vh section */
+/* Content-heavy scenes activate as soon as their first edge enters view. */
 const ioEarly = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
     if (entry.isIntersecting) activateScene(entry.target.dataset.scene);
@@ -415,18 +420,11 @@ SCENE_ORDER.forEach(id => {
 });
 
 /* ---------------------------------------------------------
-   9. FAMILY CONSTELLATION
-      A living node-graph. Nodes appear progressively as the
-      visitor scrolls through this tall section; once shown,
-      a node stays visible and lit for the rest of the journey.
+   9. FAMILY LIST
 --------------------------------------------------------- */
 const Constellation = (() => {
-  const section = $("#scene-family");
   const list = $("#family-list");
-  const caption = $("#family-caption");
-  const note = $("#family-auto-note");
   const MEMBERS = [
-    { name:FAMILY.center.name, role:"Birthday chapter" },
     { name:FAMILY.parents[0].name, role:FAMILY.parents[0].role },
     { name:FAMILY.parents[1].name, role:FAMILY.parents[1].role },
     { name:FAMILY.wife.name, role:FAMILY.wife.role },
@@ -436,61 +434,38 @@ const Constellation = (() => {
     { name:FAMILY.sisterHusband.name, role:FAMILY.sisterHusband.role },
     ...FAMILY.sisterKids.map(k => ({name:k.name, role:"Family"}))
   ];
-  let active = false, autoStopped = false, timer = null;
-  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let active = false;
   function build(){
     list.innerHTML = "";
     MEMBERS.forEach((member, index) => {
-      const row = document.createElement("div"); row.className = "family-member";
+      const row = document.createElement("div"); row.className = "family-member revealed";
       row.innerHTML = `<span class="family-index">${pad2(index+1)}</span><span class="family-member-copy"><strong>${member.name}</strong><small>${member.role}</small></span><span class="family-dot"></span>`;
       list.appendChild(row);
     });
   }
-  function reveal(index){
-    const row = list.children[index]; if (!row) return;
-    row.classList.add("revealed", "glowing");
-    setTimeout(() => row.classList.remove("glowing"), 900);
-    Sound.fx.soft();
-    caption.textContent = index === 0 ? "One beautiful journey, held by many people." : `${MEMBERS[index].name} · ${MEMBERS[index].role}`;
-    caption.classList.add("show");
-  }
-  function stop(){ if (autoStopped) return; autoStopped = true; if (timer) clearTimeout(timer); note.classList.add("is-hidden"); }
-  function start(){
-    if (autoStopped) return;
-    if (reduceMotion){ MEMBERS.forEach((_, i) => reveal(i)); note.classList.add("is-hidden"); return; }
-    let index = 0;
-    const next = () => {
-      if (autoStopped) return; reveal(index++);
-      if (index < MEMBERS.length) timer = setTimeout(next, 1450);
-      else { note.classList.add("is-hidden"); timer = setTimeout(() => { if (!autoStopped) scrollToScene("gift", "smooth"); }, 1800); }
-    };
-    timer = setTimeout(next, 850);
-  }
   function activate(){
-    if (active) return; active = true; build();
-    ["wheel","pointerdown","touchstart","keydown"].forEach(type => window.addEventListener(type, stop, {once:true, passive:type !== "keydown"}));
-    start();
+    if (active) return;
+    active = true;
+    build();
   }
   return { activate };
 })();
 
 /* ---------------------------------------------------------
-   10. PHOTO JOURNEY — 31 memories, scroll-driven, sticky stage
+   10. PHOTO JOURNEY — visitor-controlled memories
 --------------------------------------------------------- */
 const PhotoJourney = (() => {
-  const section = $("#scene-photos");
   const stage = $("#photo-stage");
   const counter = $("#mem-current");
+  const prevButton = $("#mem-prev");
+  const nextButton = $("#mem-next");
   const navToggle = $("#mem-nav-toggle");
   const navPanel = $("#mem-nav-panel");
   const navGrid = $("#mem-nav-grid");
 
   let imgA, imgB, activeIsA = true;
-  let currentIndex = -1;
+  let currentIndex = 1;
   let active = false;
-  let autoTimer = null;
-  let autoStopped = false;
-  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const cache = new Map();
 
   function srcFor(i){ return `images/${i}.webp`; }
@@ -526,20 +501,14 @@ const PhotoJourney = (() => {
     for (let i=1;i<=PHOTO_COUNT;i++){
       const b = document.createElement("button");
       b.textContent = pad2(i);
-      b.addEventListener("click", () => { jumpTo(i); navPanel.hidden = true; });
+      b.addEventListener("click", () => { showIndex(i); navPanel.hidden = true; });
       navGrid.appendChild(b);
     }
   }
 
-  function jumpTo(i){
-    const total = section.offsetHeight - innerHeight;
-    const progress = (i-1) / (PHOTO_COUNT-1);
-    const targetY = section.offsetTop + progress*total;
-    window.scrollTo({ top: targetY, behavior:"smooth" });
-  }
-
   function showIndex(i){
-    if (i === currentIndex) return;
+    i = clamp(i, 1, PHOTO_COUNT);
+    if (i === currentIndex && imgA?.src) return;
     currentIndex = i;
     counter.textContent = pad2(i);
     const nextImg = activeIsA ? imgB : imgA;
@@ -551,36 +520,8 @@ const PhotoJourney = (() => {
     Sound.fx.photo();
     preload(i+1); preload(i+2); preload(i-1);
     $$(".mem-nav-grid button", navPanel).forEach((b,bi) => b.classList.toggle("current", bi === i-1));
-  }
-
-  function onScroll(){
-    const rect = section.getBoundingClientRect();
-    const total = section.offsetHeight - innerHeight;
-    const scrolled = clamp(-rect.top, 0, total);
-    const progress = total > 0 ? scrolled/total : 0;
-    const idx = clamp(Math.round(progress*(PHOTO_COUNT-1))+1, 1, PHOTO_COUNT);
-    showIndex(idx);
-  }
-
-  function stopAuto(){
-    autoStopped = true;
-    if (autoTimer) clearTimeout(autoTimer);
-  }
-
-  function startAuto(){
-    if (reduceMotion || autoStopped) return;
-    const total = Math.max(0, section.offsetHeight - innerHeight);
-    let step = 1;
-    const advance = () => {
-      if (autoStopped) return;
-      const target = section.offsetTop + ((step - 1) / (PHOTO_COUNT - 1)) * total;
-      window.scrollTo({top: target, behavior:"smooth"});
-      showIndex(step);
-      step++;
-      if (step <= PHOTO_COUNT) autoTimer = setTimeout(advance, 1900);
-      else autoTimer = setTimeout(() => scrollToScene("collage", "smooth"), 1800);
-    };
-    autoTimer = setTimeout(advance, 1100);
+    prevButton.disabled = i === 1;
+    nextButton.disabled = i === PHOTO_COUNT;
   }
 
   function activate(){
@@ -589,13 +530,12 @@ const PhotoJourney = (() => {
     buildStage();
     buildNav();
     for (let i=1; i<=PHOTO_COUNT; i++) preload(i);
-    window.addEventListener("scroll", onScroll, {passive:true});
-    ["wheel","pointerdown","touchstart","keydown"].forEach(type => window.addEventListener(type, stopAuto, {once:true, passive:type !== "keydown"}));
-    onScroll();
-    setTimeout(startAuto, reduceMotion ? 0 : 1000);
+    showIndex(1);
   }
 
-  navToggle.addEventListener("click", () => { stopAuto(); navPanel.hidden = !navPanel.hidden; });
+  prevButton.addEventListener("click", () => showIndex(currentIndex - 1));
+  nextButton.addEventListener("click", () => showIndex(currentIndex + 1));
+  navToggle.addEventListener("click", () => { navPanel.hidden = !navPanel.hidden; });
 
   return { activate };
 })();
@@ -685,14 +625,6 @@ const Collage = (() => {
       ctx.restore();
     });
     if (p < 1) raf = requestAnimationFrame(draw);
-    else {
-      setTimeout(() => {
-        // fade out
-        canvas.style.transition = "opacity 1.4s ease";
-        canvas.style.opacity = "0";
-        setTimeout(() => scrollToScene("final"), 1500);
-      }, 900);
-    }
   }
 
   function activate(){

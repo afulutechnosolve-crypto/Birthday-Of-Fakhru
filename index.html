@@ -52,6 +52,7 @@
       <div class="chapter-31" id="chapter-number">31</div>
       <div class="chapter-label" id="chapter-label">CHAPTER 31</div>
       <div class="chapter-begins" id="chapter-begins">BEGINS</div>
+      <button class="next-section-btn" data-next-scene="name">Go next <span aria-hidden="true">&darr;</span></button>
     </div>
   </section>
 
@@ -68,20 +69,23 @@
       </div>
       <h1 class="hero-name">FAKHRUDHEEN<br/>NAVAS MP</h1>
       <p class="hero-sub">31 YEARS. COUNTLESS MEMORIES.</p>
-      <div class="scroll-hint">scroll to continue</div>
+      <button class="next-section-btn" data-next-scene="family">Meet the family <span aria-hidden="true">&darr;</span></button>
     </div>
   </section>
 
   <!-- ============ SCENE 04 : FAMILY CONSTELLATION ============ -->
-  <section class="scene scene-tall" id="scene-family" data-scene="family" hidden>
+  <section class="scene family-scene" id="scene-family" data-scene="family" hidden>
     <div class="family-sticky">
       <div class="family-list-wrap">
         <p class="family-kicker">THE PEOPLE WHO MAKE THE JOURNEY MEANINGFUL</p>
         <h2 class="family-title">Our family, line by line</h2>
+        <div class="birthday-wish">
+          <strong>FAKHRUDHEEN NAVAS MP</strong>
+          <p>Wishing you a beautiful 31st birthday filled with love, happiness, and countless memories.</p>
+        </div>
         <div id="family-list" class="family-list" aria-live="polite"></div>
-        <p class="family-caption" id="family-caption"></p>
+        <button class="next-section-btn" data-next-scene="gift">Go to the gift <span aria-hidden="true">&darr;</span></button>
       </div>
-      <div class="family-auto-note" id="family-auto-note">A family is forming</div>
     </div>
   </section>
 
@@ -94,11 +98,13 @@
       <span class="gift-ribbon"></span>
       <span class="gift-label">OPEN ME</span>
     </button>
+    <button id="gift-next" class="next-section-btn" data-next-scene="countdown" hidden>Go next <span aria-hidden="true">&darr;</span></button>
   </section>
 
   <!-- ============ SCENE 07 : COUNTDOWN ============ -->
   <section class="scene" id="scene-countdown" data-scene="countdown" hidden>
     <div id="countdown-num" class="countdown-num">3</div>
+    <button id="countdown-next" class="next-section-btn" data-next-scene="memintro" hidden>Go next <span aria-hidden="true">&darr;</span></button>
   </section>
 
   <!-- ============ SCENE 08 : MEMORY INTRO ============ -->
@@ -106,24 +112,31 @@
     <p class="mem-intro-line" data-line="1">31 MEMORIES</p>
     <p class="mem-intro-line" data-line="2">31 MOMENTS</p>
     <p class="mem-intro-line" data-line="3">ONE BEAUTIFUL JOURNEY</p>
+    <button class="next-section-btn mem-intro-next" data-next-scene="photos">See the memories <span aria-hidden="true">&darr;</span></button>
   </section>
 
   <!-- ============ SCENE 09 : PHOTO JOURNEY ============ -->
-  <section class="scene scene-tall" id="scene-photos" data-scene="photos" hidden>
+  <section class="scene" id="scene-photos" data-scene="photos" hidden>
     <div class="photo-sticky">
-      <div class="memory-counter"><span id="mem-current">01</span> / 31</div>
       <div id="photo-stage" class="photo-stage"></div>
+      <div class="memory-counter"><span id="mem-current">01</span> / 31</div>
+      <div class="photo-controls">
+        <button id="mem-prev" class="memory-step-btn" type="button">Previous</button>
+        <button id="mem-next" class="memory-step-btn" type="button">Next photo</button>
+      </div>
       <button id="mem-nav-toggle" class="mem-nav-toggle">MEMORIES</button>
       <div id="mem-nav-panel" class="mem-nav-panel" hidden>
         <p class="mem-nav-title">31 PHOTOS FOR YOUR 31ST BIRTHDAY</p>
         <div id="mem-nav-grid" class="mem-nav-grid"></div>
       </div>
+      <button class="next-section-btn photo-next-section" data-next-scene="collage">Go next <span aria-hidden="true">&darr;</span></button>
     </div>
   </section>
 
   <!-- ============ SCENE 10 : ALL MEMORIES RETURN ============ -->
   <section class="scene" id="scene-collage" data-scene="collage" hidden>
     <canvas id="collage-canvas"></canvas>
+    <button class="next-section-btn collage-next" data-next-scene="final">Go next <span aria-hidden="true">&darr;</span></button>
   </section>
 
   <!-- ============ SCENE 11 : FINAL ============ -->
@@ -133,6 +146,7 @@
       <h1 class="final-line" id="final-line-1">HAPPY 31ST BIRTHDAY <span class="heart-glyph">&#10084;</span></h1>
       <p class="final-line-2" id="final-line-2">Thanks For Open The Website</p>
       <p class="final-with-love" id="final-with-love">WITH LOVE</p>
+      <button id="final-restart" class="next-section-btn final-restart">Start again <span aria-hidden="true">&uarr;</span></button>
     </div>
   </section>
 
