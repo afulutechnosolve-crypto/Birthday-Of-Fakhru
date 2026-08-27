@@ -276,7 +276,7 @@ $("#gift-box").addEventListener("click", () => {
   Sound.fx.burst();
   setTimeout(() => {
     $("#gift-box").hidden = true;
-    $("#gift-next").hidden = false;
+    scrollToScene("countdown");
   }, 700);
 });
 
@@ -348,7 +348,7 @@ function runCountdown(){
         el.textContent = "OPEN";
         el.className = "countdown-num burst";
         Sound.fx.burst();
-        setTimeout(() => $("#countdown-next").hidden = false, 750);
+        setTimeout(() => scrollToScene("memintro"), 1600);
       }, 1000);
     }
   }
@@ -362,32 +362,37 @@ function runMemIntro(){
     setTimeout(() => l.classList.add("show"), delay);
     delay += 1900;
   });
+  setTimeout(() => scrollToScene("photos"), delay + 2400);
 }
 
 function runFinal(){
   Sound.fx.climax();
   HeartField.activate();
-  const l1 = $("#final-line-1"), l2 = $("#final-line-2"), l3 = $("#final-with-love");
+  const l1 = $("#final-line-1"), l2 = $("#final-line-2"), l3 = $("#final-with-love"), fd = $("#final-date");
   setTimeout(() => l1.classList.add("show"), 600);
   setTimeout(() => l2.classList.add("show"), 2200);
+  setTimeout(() => fd.classList.add("show"), 3000);
   setTimeout(() => l3.classList.add("show"), 3600);
 }
 
 /* ---------------------------------------------------------
    7. START BUTTON
 --------------------------------------------------------- */
+function launchApp(){
+  revealAllScenes();
+  document.documentElement.style.overflow = "auto";
+  activateScene("boot");
+  scrollToScene("warp", "smooth");
+}
 $("#start-btn").addEventListener("click", (e) => {
   Sound.init();
   Sound.fx.activate();
-  const btn = e.currentTarget;
-  btn.classList.add("launching");
-  document.body.style.overflow = "";
-  setTimeout(() => {
-    revealAllScenes();
-    document.documentElement.style.overflow = "auto";
-    activateScene("boot");
-    scrollToScene("warp", "smooth");
-  }, 750);
+  e.currentTarget.classList.add("launching");
+  setTimeout(() => { $("#start-building-btn").hidden = false; }, 900);
+});
+$("#start-building-btn").addEventListener("click", () => {
+  Sound.fx.activate();
+  launchApp();
 });
 
 /* lock scroll until launch */
@@ -632,6 +637,7 @@ const Collage = (() => {
     started = true;
     init();
     draw();
+    setTimeout(() => $("#collage-caption").classList.add("show"), 1300);
     window.addEventListener("resize", () => { resize(); });
   }
 
